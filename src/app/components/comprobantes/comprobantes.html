@@ -1,0 +1,55 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Comprobantes</h1>
+        <p class="muted">Historial de comprobantes emitidos (últimos 30 días por defecto)</p>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="toolbar">
+        <div class="field">
+          <label>Desde</label>
+          <input type="date" [(ngModel)]="desde" name="desde" />
+        </div>
+        <div class="field">
+          <label>Hasta</label>
+          <input type="date" [(ngModel)]="hasta" name="hasta" />
+        </div>
+        <button class="btn btn-primary btn-sm" type="button" (click)="cargar()">Filtrar</button>
+      </div>
+
+      @if (comprobantes().length === 0) {
+        <p class="muted">No hay comprobantes en el rango seleccionado.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Tipo</th>
+                <th>Serie-Número</th>
+                <th>Venta</th>
+                <th>Fecha de emisión</th>
+                <th class="right">Total</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (comprobante of comprobantes(); track comprobante.idComprobante) {
+                <tr>
+                  <td>{{ comprobante.tipo }}</td>
+                  <td>{{ comprobante.serie }}-{{ comprobante.numero }}</td>
+                  <td>#{{ comprobante.idVenta }}</td>
+                  <td>{{ comprobante.fechaEmision | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="right">S/ {{ comprobante.total | number: '1.2-2' }}</td>
+                  <td class="right acciones">
+                    <button class="btn btn-outline btn-sm" type="button" (click)="descargar(comprobante.idComprobante)">PDF</button>
+                    <button class="btn btn-outline btn-sm" type="button" (click)="reimprimir(comprobante.idComprobante)">Reimprimir</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>

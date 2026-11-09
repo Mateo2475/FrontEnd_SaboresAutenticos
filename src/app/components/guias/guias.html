@@ -1,0 +1,107 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Guías de remisión</h1>
+        <p class="muted">Ingreso de mercadería y actualización de stock</p>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Registrar ingreso</h2>
+      </div>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Número de guía</label>
+          <input type="text" [(ngModel)]="numeroGuia" name="numeroGuia" tabindex="1" />
+        </div>
+        <div class="field">
+          <label>Proveedor</label>
+          <input type="text" [(ngModel)]="proveedor" name="proveedor" tabindex="2" />
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="right">Cantidad</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (linea of lineas(); track $index) {
+              <tr>
+                <td>
+                  <select [ngModel]="linea.idProducto" (ngModelChange)="actualizarProducto($index, $event)" [name]="'producto' + $index">
+                    <option [ngValue]="null">— Seleccione —</option>
+                    @for (producto of productos(); track producto.idProducto) {
+                      <option [ngValue]="producto.idProducto">{{ producto.nombre }}</option>
+                    }
+                  </select>
+                </td>
+                <td class="right">
+                  <input
+                    class="input input-sm"
+                    type="number"
+                    min="1"
+                    [ngModel]="linea.cantidad"
+                    (ngModelChange)="actualizarCantidad($index, $event)"
+                    [name]="'cantidad' + $index"
+                  />
+                </td>
+                <td class="right">
+                  <button class="btn btn-danger btn-sm" type="button" (click)="quitarLinea($index)">✕</button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="toolbar">
+        <button class="btn btn-outline btn-sm" type="button" (click)="agregarLinea()">Agregar producto</button>
+        <button class="btn btn-primary" type="button" [disabled]="registrando()" (click)="registrar()">
+          {{ registrando() ? 'Registrando...' : 'Registrar guía' }}
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Guías registradas</h2>
+        <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Actualizar</button>
+      </div>
+      @if (guias().length === 0) {
+        <p class="muted">No hay guías registradas.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Número</th>
+                <th>Proveedor</th>
+                <th>Empleado</th>
+                <th>Fecha</th>
+                <th class="right">Productos</th>
+                <th class="right">Unidades</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (guia of guias(); track guia.idGuia) {
+                <tr>
+                  <td>{{ guia.numeroGuia }}</td>
+                  <td>{{ guia.proveedor }}</td>
+                  <td>{{ guia.empleado }}</td>
+                  <td>{{ guia.fechaIngreso | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="right">{{ guia.detalles.length }}</td>
+                  <td class="right">{{ totalUnidades(guia) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>

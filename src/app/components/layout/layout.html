@@ -1,0 +1,45 @@
+
+    <div class="layout" [class.sidebar-abierto]="menuAbierto()">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <span class="logo">SA</span>
+          <div>
+            <strong>Sabores Auténticos</strong>
+            <small>Gestión comercial</small>
+          </div>
+        </div>
+
+        <nav class="sidebar-nav">
+          @for (item of itemsVisibles(); track item.ruta) {
+            <a [routerLink]="item.ruta" routerLinkActive="activo" (click)="menuAbierto.set(false)">
+              <span class="nav-icono">{{ item.icono }}</span>
+              {{ item.etiqueta }}
+            </a>
+          }
+        </nav>
+      </aside>
+
+      <div class="main-area">
+        <header class="topbar">
+          <button class="btn-icono" type="button" (click)="menuAbierto.set(!menuAbierto())">☰</button>
+          <div class="topbar-usuario">
+            <span class="usuario">{{ authService.username() }}</span>
+            <span class="roles">{{ authService.roles().join(' · ') }}</span>
+          </div>
+          <button class="btn btn-outline btn-sm" type="button" (click)="authService.logout()">Salir</button>
+        </header>
+
+        <main class="content">
+          <router-outlet />
+        </main>
+      </div>
+
+      <div class="toast-container">
+        @for (notificacion of notificaciones(); track notificacion.id) {
+          <div [class]="'toast toast-' + notificacion.tipo" (click)="cerrar(notificacion.id)">
+            {{ notificacion.mensaje }}
+          </div>
+        }
+      </div>
+    </div>
+

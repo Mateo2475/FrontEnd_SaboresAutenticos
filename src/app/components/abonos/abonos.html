@@ -1,0 +1,94 @@
+<div class="page-header">
+      <div>
+        <h1>Abonos</h1>
+        <p class="muted">Registro e historial de pagos de créditos</p>
+      </div>
+    </div>
+
+    @if (puedeEscribir()) {
+    <section class="card">
+      <div class="card-header">
+        <h2>Registrar abono</h2>
+      </div>
+      <div class="form-grid">
+        <div class="field">
+          <label>Cliente con deuda</label>
+          <select [(ngModel)]="idCliente" name="idCliente">
+            <option [ngValue]="null">— Seleccione —</option>
+            @for (deudor of deudores(); track deudor.idCliente) {
+              <option [ngValue]="deudor.idCliente">
+                {{ deudor.nombres }} {{ deudor.apellidos }} · S/ {{ deudor.deudaPendiente | number: '1.2-2' }}
+              </option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label>Monto</label>
+          <input type="number" step="0.01" min="0.01" [(ngModel)]="monto" name="monto" />
+        </div>
+        <div class="field">
+          <label>Método de pago</label>
+          <select [(ngModel)]="metodoPago" name="metodoPago">
+            <option value="EFECTIVO">Efectivo</option>
+            <option value="YAPE">Yape</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" type="button" [disabled]="registrando()" (click)="registrar()">
+        {{ registrando() ? 'Registrando...' : 'Registrar abono' }}
+      </button>
+
+      @if (resultado(); as aplicado) {
+        <div class="resultado">
+          <p class="exito-text">{{ aplicado.mensaje }}</p>
+          <p class="muted">
+            Aplicado: S/ {{ aplicado.montoAplicado | number: '1.2-2' }} · Deuda restante:
+            S/ {{ aplicado.deudaRestante | number: '1.2-2' }}
+          </p>
+          <div class="ticket">
+            <h3>Recibo de abono</h3>
+            <p>Monto: S/ {{ aplicado.montoAplicado | number: '1.2-2' }}</p>
+            <p>Deuda restante: S/ {{ aplicado.deudaRestante | number: '1.2-2' }}</p>
+          </div>
+          <button class="btn btn-outline btn-sm no-print" type="button" onclick="window.print()">Imprimir recibo</button>
+        </div>
+      }
+    </section>
+    }
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Historial de abonos</h2>
+        <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Actualizar</button>
+      </div>
+      @if (abonos().length === 0) {
+        <p class="muted">No hay abonos registrados.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Cajero</th>
+                <th>Método</th>
+                <th class="right">Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (abono of abonos(); track abono.idAbono) {
+                <tr>
+                  <td>{{ abono.idAbono }}</td>
+                  <td>{{ abono.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ abono.cliente }}</td>
+                  <td>{{ abono.cajero }}</td>
+                  <td>{{ abono.metodoPago }}</td>
+                  <td class="right">S/ {{ abono.monto | number: '1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>

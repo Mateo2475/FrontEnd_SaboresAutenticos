@@ -1,0 +1,147 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Créditos</h1>
+        <p class="muted">Deudas pendientes y estado de cuenta por cliente</p>
+      </div>
+      <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Actualizar</button>
+    </div>
+
+    @if (puedeEscribir()) {
+      <section class="card">
+        <div class="card-header"><h2>Abrir cuenta de crédito</h2></div>
+        <div class="form-grid">
+          <div class="field">
+            <label>ID de cliente</label>
+            <input type="number" [(ngModel)]="idClienteAbrir" name="idClienteAbrir" />
+          </div>
+        </div>
+        <button class="btn btn-primary" type="button" (click)="abrirCuenta()">Abrir cuenta</button>
+      </section>
+    }
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Clientes con deuda</h2>
+      </div>
+      @if (deudores().length === 0) {
+        <p class="muted">No hay clientes con deuda pendiente.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>DNI</th>
+                <th>Periodo</th>
+                <th class="right">Límite</th>
+                <th class="right">Consumido</th>
+                <th class="right">Abonado</th>
+                <th class="right">Deuda ▼</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cuenta of deudores(); track cuenta.idCliente + '-' + cuenta.year + '-' + cuenta.month) {
+                <tr>
+                  <td>{{ cuenta.nombres }} {{ cuenta.apellidos }}</td>
+                  <td>{{ cuenta.dni }}</td>
+                  <td>{{ cuenta.month }}/{{ cuenta.year }}</td>
+                  <td class="right">S/ {{ cuenta.limiteCredito | number: '1.2-2' }}</td>
+                  <td class="right">S/ {{ cuenta.montoConsumido | number: '1.2-2' }}</td>
+                  <td class="right">S/ {{ cuenta.montoAbonado | number: '1.2-2' }}</td>
+                  <td class="right strong">S/ {{ cuenta.deudaPendiente | number: '1.2-2' }}</td>
+                  <td class="right acciones">
+                    <button class="btn btn-outline btn-sm" type="button" (click)="verEstado(cuenta)">Estado</button>
+                    @if (puedeEscribir()) {
+                      <button class="btn btn-primary btn-sm" type="button" (click)="abrirAbono(cuenta)">Abonar</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (estadoCuenta().length > 0) {
+      <section class="card">
+        <div class="card-header">
+          <h2>Estado de cuenta: {{ clienteActual() }}</h2>
+          <button class="btn btn-outline btn-sm" type="button" (click)="estadoCuenta.set([])">Cerrar</button>
+        </div>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Periodo</th>
+                <th class="right">Límite</th>
+                <th class="right">Consumido</th>
+                <th class="right">Abonado</th>
+                <th class="right">Deuda ▼</th>
+                <th class="right">Saldo disponible</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cuenta of estadoCuenta(); track cuenta.year + '-' + cuenta.month) {
+                <tr>
+                  <td>{{ cuenta.month }}/{{ cuenta.year }}</td>
+                  <td class="right">S/ {{ cuenta.limiteCredito | number: '1.2-2' }}</td>
+                  <td class="right">S/ {{ cuenta.montoConsumido | number: '1.2-2' }}</td>
+                  <td class="right">S/ {{ cuenta.montoAbonado | number: '1.2-2' }}</td>
+                  <td class="right">S/ {{ cuenta.deudaPendiente | number: '1.2-2' }}</td>
+                  <td class="right">S/ {{ cuenta.saldoDisponible | number: '1.2-2' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-warn]="cuenta.estadoDeuda === 'CON DEUDA'" [class.badge-ok]="cuenta.estadoDeuda !== 'CON DEUDA'">
+                      {{ cuenta.estadoDeuda }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    @if (cuentaAbono(); as cuenta) {
+      <div class="modal-backdrop" (click)="cerrarAbono()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Registrar abono</h2>
+            <button class="btn-icono" type="button" (click)="cerrarAbono()">✕</button>
+          </div>
+
+          <p class="muted">
+            Cliente: <strong>{{ cuenta.nombres }} {{ cuenta.apellidos }}</strong> · Deuda total del periodo:
+            S/ {{ cuenta.deudaPendiente | number: '1.2-2' }}
+          </p>
+
+          <div class="field">
+            <label>Monto a abonar</label>
+            <input type="number" step="0.01" min="0.01" [(ngModel)]="monto" name="monto" />
+          </div>
+          <div class="field">
+            <label>Método de pago</label>
+            <select [(ngModel)]="metodoPago" name="metodoPago">
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="YAPE">Yape</option>
+            </select>
+          </div>
+
+          @if (ultimoAbono(); as resultado) {
+            <p class="exito-text">{{ resultado.mensaje }}</p>
+            <p class="muted">Deuda restante: S/ {{ resultado.deudaRestante | number: '1.2-2' }}</p>
+          }
+
+          <div class="modal-footer">
+            <button class="btn btn-outline" type="button" (click)="cerrarAbono()">Cancelar</button>
+            <button class="btn btn-primary" type="button" [disabled]="abonando()" (click)="registrarAbono()">
+              {{ abonando() ? 'Registrando...' : 'Registrar abono' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }

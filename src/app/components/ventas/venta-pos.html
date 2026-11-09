@@ -1,0 +1,202 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Nueva venta</h1>
+        <p class="muted">Registro de ventas al contado o al crédito</p>
+      </div>
+    </div>
+
+    <div class="pos-grid">
+      <section class="card">
+        <div class="toolbar">
+          <input
+            class="input"
+            type="search"
+            placeholder="Buscar producto"
+            [ngModel]="buscador()"
+            (ngModelChange)="buscador.set($event)"
+            name="buscador"
+          />
+        </div>
+
+        @if (productosFiltrados().length === 0) {
+          <p class="muted">No hay productos disponibles.</p>
+        } @else {
+          <div class="productos-grid">
+            @for (producto of productosFiltrados(); track producto.idProducto) {
+              <button class="producto-card" type="button" (click)="agregar(producto)" [disabled]="producto.stock <= 0">
+                <span class="producto-nombre">{{ producto.nombre }}</span>
+                <span class="producto-categoria">{{ producto.categoria }}</span>
+                <span class="producto-precio">S/ {{ producto.precio | number: '1.2-2' }}</span>
+                <span class="producto-stock" [class.badge-warn]="producto.stock <= producto.stockMinimo">
+                  Stock: {{ producto.stock }}
+                </span>
+              </button>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="card carrito">
+        <div class="card-header">
+          <h2>Carrito</h2>
+          <button class="btn btn-outline btn-sm" type="button" (click)="limpiar()" [disabled]="carrito().length === 0">
+            Vaciar
+          </button>
+        </div>
+
+        @if (carrito().length === 0) {
+          <p class="muted">Agregue productos para iniciar la venta.</p>
+        } @else {
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th class="right">Cant.</th>
+                  <th class="right">Subtotal</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (linea of carrito(); track linea.producto.idProducto) {
+                  <tr>
+                    <td>{{ linea.producto.nombre }}</td>
+                    <td class="right">
+                      <input
+                        class="input input-sm"
+                        type="number"
+                        min="1"
+                        [max]="linea.producto.stock"
+                        [value]="linea.cantidad"
+                        (input)="actualizarCantidad(linea, $event)"
+                      />
+                    </td>
+                    <td class="right">S/ {{ linea.producto.precio * linea.cantidad | number: '1.2-2' }}</td>
+                    <td class="right">
+                      <button class="btn btn-danger btn-sm" type="button" (click)="quitar(linea)">✕</button>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="field">
+            <label>Tipo de pago</label>
+            <select [ngModel]="tipoPago()" (ngModelChange)="cambiarTipoPago($event)" name="tipoPago">
+              <option value="CONTADO">Contado</option>
+              <option value="CREDITO">Crédito</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Cliente {{ tipoPago() === 'CREDITO' ? '(obligatorio)' : '(opcional)' }}</label>
+            <input
+              type="search"
+              class="input"
+              placeholder="Buscar cliente (mín. 3 caracteres)"
+              [formControl]="busquedaCliente"
+              name="busquedaCliente"
+            />
+            @if (clientes().length > 0) {
+              <ul class="autocomplete-list">
+                @for (cliente of clientes(); track cliente.idCliente) {
+                  <li (click)="seleccionarCliente(cliente)">
+                    {{ cliente.nombres }} {{ cliente.apellidos }} ({{ cliente.dni }})
+                  </li>
+                }
+              </ul>
+            }
+            @if (clienteSeleccionado(); as c) {
+              <p class="muted">Seleccionado: {{ c.nombres }} {{ c.apellidos }}</p>
+            }
+            @if (tipoPago() === 'CONTADO' && !clienteSeleccionado()) {
+              <button class="btn btn-outline btn-sm" type="button" (click)="idCliente.set(null)">Consumidor final</button>
+            }
+          </div>
+
+          @if (tipoPago() === 'CONTADO') {
+            <div class="form-grid">
+              <div class="field">
+                <label>Método de pago</label>
+                <select [(ngModel)]="metodoPago" name="metodoPago" (ngModelChange)="montoYape.set(0)">
+                  <option value="EFECTIVO">Efectivo</option>
+                  <option value="YAPE">Yape</option>
+                  <option value="COMBINADO">Yape + Efectivo</option>
+                </select>
+              </div>
+              @if (metodoPago === 'COMBINADO') {
+                <div class="field">
+                  <label>Monto Yape</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    [ngModel]="montoYape()"
+                    (ngModelChange)="montoYape.set(+$event)"
+                    name="montoYape"
+                  />
+                </div>
+                <div class="field">
+                  <label>Efectivo (editable, autocompletado)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    [ngModel]="montoEfectivo()"
+                    (ngModelChange)="montoEfectivo.set(+$event)"
+                    name="montoEfectivo"
+                  />
+                </div>
+              } @else {
+                <div class="field">
+                  <label>Monto recibido (debe ser exacto)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    [ngModel]="montoRecibido()"
+                    (ngModelChange)="montoRecibido.set(+$event)"
+                    name="montoRecibido"
+                  />
+                </div>
+              }
+            </div>
+            <p class="muted">
+              Total: S/ {{ total() | number: '1.2-2' }} · Diferencia: S/ {{ diferencia() | number: '1.2-2' }}
+            </p>
+          } @else {
+            <p class="muted">La venta al crédito se cargará a la cuenta mensual del cliente.</p>
+          }
+
+          <div class="total-row">
+            <span>Total</span>
+            <strong>S/ {{ total() | number: '1.2-2' }}</strong>
+          </div>
+
+          <button class="btn btn-primary btn-block" type="button" [disabled]="!puedeRegistrar() || procesando()" (click)="registrar()">
+            {{ procesando() ? 'Registrando...' : 'Registrar venta' }}
+          </button>
+        }
+      </section>
+    </div>
+
+    @if (ultimaVenta(); as venta) {
+      <section class="card exito">
+        <h2>Venta registrada</h2>
+        <p>Venta #{{ venta.idVenta }} · Total S/ {{ venta.total | number: '1.2-2' }}</p>
+        @if (venta.comprobante; as comprobante) {
+          <p>
+            Comprobante {{ comprobante.tipo }} {{ comprobante.serie }}-{{ comprobante.numero }}
+          </p>
+        }
+        <div class="ticket">
+          <h3>Sabores Auténticos</h3>
+          <p>Ticket #{{ venta.idVenta }}</p>
+          <p>Total: S/ {{ venta.total | number: '1.2-2' }}</p>
+        </div>
+        <button class="btn btn-outline btn-sm no-print" type="button" onclick="window.print()">Imprimir ticket</button>
+        <button class="btn btn-outline btn-sm no-print" type="button" (click)="ultimaVenta.set(null)">Cerrar</button>
+      </section>
+    }

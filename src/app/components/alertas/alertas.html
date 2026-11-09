@@ -1,0 +1,86 @@
+<div class="page-header">
+  <div>
+    <h1>Alertas de deuda</h1>
+    <p class="muted">Envío simulado por SMS y correo con reintentos</p>
+  </div>
+  <button class="btn btn-primary" type="button" [disabled]="enviando()" (click)="enviar()">
+    {{ enviando() ? 'Enviando...' : 'Enviar alertas' }}
+  </button>
+</div>
+
+<section class="card">
+  <div class="card-header">
+    <h2>Clientes con deuda</h2>
+    <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Actualizar</button>
+  </div>
+  @if (deudores().length === 0) {
+    <p class="muted">No hay clientes con deuda pendiente.</p>
+  } @else {
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>DNI</th>
+            <th>Nivel</th>
+            <th class="right">Deuda</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (deudor of deudores(); track deudor.idCliente) {
+            <tr>
+              <td>{{ deudor.cliente }}</td>
+              <td>{{ deudor.dni }}</td>
+              <td>
+                <span class="badge" [class.badge-off]="deudor.deudaPendiente >= 400" [class.badge-warn]="deudor.deudaPendiente < 400">
+                  {{ deudor.deudaPendiente >= 400 ? 'Crítico' : 'Alerta' }}
+                </span>
+              </td>
+              <td class="right" [class.text-danger]="deudor.deudaPendiente >= 400" [class.text-warn]="deudor.deudaPendiente < 400">
+              S/ {{ deudor.deudaPendiente | number: '1.2-2' }}
+            </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (envios().length > 0) {
+  <section class="card">
+    <div class="card-header">
+      <h2>Resultado de envíos</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Cliente</th>
+            <th>Canal</th>
+            <th>Destino</th>
+            <th class="right">Intentos</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (envio of envios(); track $index) {
+            <tr>
+              <td>{{ envio.cliente }}</td>
+              <td>{{ envio.canal }}</td>
+              <td>{{ envio.destino }}</td>
+              <td class="right">{{ envio.intentos }}</td>
+              <td>
+                <span class="badge" [class.badge-ok]="envio.estado === 'ENVIADO'" [class.badge-off]="envio.estado !== 'ENVIADO'">
+                  {{ envio.estado }}
+                </span>
+              </td>
+              <td>{{ envio.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+}

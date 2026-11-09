@@ -1,0 +1,82 @@
+    <div class="page-header">
+      <div>
+        <h1>Categorías</h1>
+        <p class="muted">Categorías y subcategorías (máximo 2 niveles)</p>
+      </div>
+      <button class="btn btn-primary" type="button" (click)="abrirCrear()">Nueva categoría</button>
+    </div>
+
+    <section class="card">
+      @if (categorias().length === 0) {
+        <p class="muted">No hay categorías registradas.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Categoría padre</th>
+                <th>Descripción</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (categoria of categorias(); track categoria.idCategoria) {
+                <tr>
+                  <td>
+                    <span [class.subcategoria]="categoria.idCategoriaPadre">
+                      {{ categoria.idCategoriaPadre ? '↳ ' : '' }}{{ categoria.nombre }}
+                    </span>
+                  </td>
+                  <td>{{ padreNombre(categoria) }}</td>
+                  <td>{{ categoria.descripcion || '—' }}</td>
+                  <td class="right acciones">
+                    <button class="btn btn-outline btn-sm" type="button" (click)="abrirEditar(categoria)">Editar</button>
+                    <button class="btn btn-danger btn-sm" type="button" (click)="eliminar(categoria)">Eliminar</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (modalAbierto()) {
+      <div class="modal-backdrop" (click)="cerrarModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>{{ editando() ? 'Editar categoría' : 'Nueva categoría' }}</h2>
+            <button class="btn-icono" type="button" (click)="cerrarModal()">✕</button>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="guardar()">
+            <div class="field">
+              <label>Nombre</label>
+              <input type="text" formControlName="nombre" />
+            </div>
+            <div class="field">
+              <label>Categoría padre (opcional)</label>
+              <select formControlName="idCategoriaPadre">
+                <option [ngValue]="null">— Sin padre (categoría raíz) —</option>
+                @for (raiz of raicesDisponibles(); track raiz.idCategoria) {
+                  <option [ngValue]="raiz.idCategoria">{{ raiz.nombre }}</option>
+                }
+              </select>
+              <small class="muted">Solo las categorías raíz pueden ser padre.</small>
+            </div>
+            <div class="field">
+              <label>Descripción</label>
+              <input type="text" formControlName="descripcion" />
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-outline" type="button" (click)="cerrarModal()">Cancelar</button>
+              <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+                {{ guardando() ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

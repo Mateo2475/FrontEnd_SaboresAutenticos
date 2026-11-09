@@ -1,0 +1,112 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Clientes</h1>
+        <p class="muted">Registro y búsqueda de clientes</p>
+      </div>
+      <button class="btn btn-primary" type="button" (click)="abrirCrear()">Nuevo cliente</button>
+    </div>
+
+    <section class="card">
+      <div class="toolbar">
+        <input
+          class="input"
+          type="search"
+          placeholder="Buscar por nombres, apellidos, DNI o teléfono"
+          [value]="filtro()"
+          (input)="cambiarFiltro($event)"
+        />
+        <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Limpiar</button>
+      </div>
+
+      @if (clientes().length === 0) {
+        <p class="muted">No se encontraron clientes.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nombres</th>
+                <th>Apellidos</th>
+                <th>DNI</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>Estado</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cliente of clientes(); track cliente.idCliente) {
+                <tr>
+                  <td>{{ cliente.nombres }}</td>
+                  <td>{{ cliente.apellidos }}</td>
+                  <td>{{ cliente.dni }}</td>
+                  <td>{{ cliente.correo || '—' }}</td>
+                  <td>{{ cliente.telefono || '—' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-ok]="cliente.activo" [class.badge-off]="!cliente.activo">
+                      {{ cliente.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
+                  </td>
+                  <td class="right acciones">
+                    <button class="btn btn-outline btn-sm" type="button" (click)="abrirEditar(cliente)">Editar</button>
+                    @if (cliente.activo) {
+                      <button class="btn btn-outline btn-sm" type="button" (click)="desactivar(cliente)">Desactivar</button>
+                    } @else {
+                      <button class="btn btn-outline btn-sm" type="button" (click)="activar(cliente)">Activar</button>
+}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (modalAbierto()) {
+      <div class="modal-backdrop" (click)="cerrarModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>{{ editando() ? 'Editar cliente' : 'Nuevo cliente' }}</h2>
+            <button class="btn-icono" type="button" (click)="cerrarModal()">✕</button>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="guardar()">
+            <div class="form-grid">
+              <div class="field">
+                <label>Nombres</label>
+                <input type="text" formControlName="nombres" />
+              </div>
+              <div class="field">
+                <label>Apellidos</label>
+                <input type="text" formControlName="apellidos" />
+              </div>
+              <div class="field">
+                <label>DNI (8 dígitos)</label>
+                <input type="text" formControlName="dni" maxlength="8" />
+              </div>
+              <div class="field">
+                <label>Teléfono</label>
+                <input type="text" formControlName="telefono" />
+              </div>
+              <div class="field">
+                <label>Correo</label>
+                <input type="email" formControlName="correo" />
+              </div>
+              <div class="field">
+                <label>Área</label>
+                <input type="text" formControlName="area" />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-outline" type="button" (click)="cerrarModal()">Cancelar</button>
+              <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+                {{ guardando() ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

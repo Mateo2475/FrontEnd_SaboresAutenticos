@@ -1,0 +1,89 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Empleados</h1>
+        <p class="muted">Personal vinculado al sistema</p>
+      </div>
+      <button class="btn btn-primary" type="button" (click)="abrirCrear()">Nuevo empleado</button>
+    </div>
+
+    <section class="card">
+      @if (empleados().length === 0) {
+        <p class="muted">No hay empleados registrados.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nombres</th>
+                <th>Apellidos</th>
+                <th>DNI</th>
+                <th>Usuario</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (empleado of empleados(); track empleado.idEmpleado) {
+                <tr>
+                  <td>{{ empleado.nombres }}</td>
+                  <td>{{ empleado.apellidos }}</td>
+                  <td>{{ empleado.dni }}</td>
+                  <td>{{ empleado.username || '—' }}</td>
+                  <td>{{ empleado.correo || '—' }}</td>
+                  <td>{{ empleado.telefono || '—' }}</td>
+                  <td class="right acciones">
+                    <button class="btn btn-outline btn-sm" type="button" (click)="abrirEditar(empleado)">Editar</button>
+                    <button class="btn btn-danger btn-sm" type="button" (click)="eliminar(empleado)">Eliminar</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (modalAbierto()) {
+      <div class="modal-backdrop" (click)="cerrarModal()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>{{ editando() ? 'Editar empleado' : 'Nuevo empleado' }}</h2>
+            <button class="btn-icono" type="button" (click)="cerrarModal()">✕</button>
+          </div>
+
+          <form [formGroup]="form" (ngSubmit)="guardar()">
+            <div class="form-grid">
+              <div class="field">
+                <label>Nombres</label>
+                <input type="text" formControlName="nombres" />
+              </div>
+              <div class="field">
+                <label>Apellidos</label>
+                <input type="text" formControlName="apellidos" />
+              </div>
+              <div class="field">
+                <label>DNI</label>
+                <input type="text" formControlName="dni" maxlength="8" />
+              </div>
+              <div class="field">
+                <label>Correo</label>
+                <input type="email" formControlName="correo" />
+              </div>
+              <div class="field">
+                <label>Teléfono</label>
+                <input type="text" formControlName="telefono" />
+              </div>
+            </div>
+
+            <div class="modal-footer">
+              <button class="btn btn-outline" type="button" (click)="cerrarModal()">Cancelar</button>
+              <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+                {{ guardando() ? 'Guardando...' : 'Guardar' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }

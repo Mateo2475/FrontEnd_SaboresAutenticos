@@ -1,0 +1,155 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Ventas</h1>
+        <p class="muted">Historial de ventas y anulación con doble factor</p>
+      </div>
+      <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Actualizar</button>
+    </div>
+
+    <section class="card">
+      <div class="toolbar">
+        <select class="input" [ngModel]="filtro()" (ngModelChange)="filtro.set($event)" name="filtro">
+          <option value="TODAS">Todas</option>
+          <option value="REGISTRADA">Registradas</option>
+          <option value="ANULADA">Anuladas</option>
+        </select>
+      </div>
+
+      @if (ventasFiltradas().length === 0) {
+        <p class="muted">No hay ventas para mostrar.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Cajero</th>
+                <th>Tipo</th>
+                <th class="right">Total</th>
+                <th>Estado</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (venta of ventasFiltradas(); track venta.idVenta) {
+                <tr>
+                  <td>{{ venta.idVenta }}</td>
+                  <td>{{ venta.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ venta.cliente || 'Consumidor final' }}</td>
+                  <td>{{ venta.cajero }}</td>
+                  <td>{{ venta.tipoPago }}</td>
+                  <td class="right">S/ {{ venta.total | number: '1.2-2' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-ok]="venta.estado !== 'ANULADA'" [class.badge-off]="venta.estado === 'ANULADA'">
+                      {{ venta.estado }}
+                    </span>
+                  </td>
+                  <td class="right acciones">
+                    <button class="btn btn-outline btn-sm" type="button" (click)="verDetalle(venta)">Ver</button>
+                    @if (authService.esAdmin() && venta.estado !== 'ANULADA') {
+                      <button class="btn btn-danger btn-sm" type="button" (click)="abrirAnulacion(venta)">Anular</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    @if (detalle(); as venta) {
+      <div class="modal-backdrop" (click)="detalle.set(null)">
+        <div class="modal modal-lg" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Venta #{{ venta.idVenta }}</h2>
+            <button class="btn-icono" type="button" (click)="detalle.set(null)">✕</button>
+          </div>
+
+          <div class="detalle-grid">
+            <p><strong>Fecha:</strong> {{ venta.fechaHora | date: 'dd/MM/yyyy HH:mm' }}</p>
+            <p><strong>Cliente:</strong> {{ venta.cliente || 'Consumidor final' }}</p>
+            <p><strong>Cajero:</strong> {{ venta.cajero }}</p>
+            <p><strong>Tipo de pago:</strong> {{ venta.tipoPago }}</p>
+            <p><strong>Estado:</strong> {{ venta.estado }}</p>
+            <p><strong>MFA verificado:</strong> {{ venta.mfaVerificado ? 'Sí' : 'No' }}</p>
+          </div>
+
+          <div class="table-wrap">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Producto</th>
+                  <th class="right">Cantidad</th>
+                  <th class="right">Precio</th>
+                  <th class="right">Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of venta.detalles; track item.idProducto) {
+                  <tr>
+                    <td>{{ item.producto }}</td>
+                    <td class="right">{{ item.cantidad }}</td>
+                    <td class="right">S/ {{ item.precioUnitario | number: '1.2-2' }}</td>
+                    <td class="right">S/ {{ item.subtotal | number: '1.2-2' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <div class="total-row">
+            <span>Total</span>
+            <strong>S/ {{ venta.total | number: '1.2-2' }}</strong>
+          </div>
+
+          @if (venta.estado === 'ANULADA') {
+            <p class="error-text">
+              Anulada: {{ venta.motivoAnulacion }} ({{ venta.fechaAnulacion | date: 'dd/MM/yyyy HH:mm' }})
+            </p>
+          }
+        </div>
+      </div>
+    }
+
+    @if (ventaAnular(); as venta) {
+      <div class="modal-backdrop" (click)="cerrarAnulacion()">
+        <div class="modal" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <h2>Anular venta #{{ venta.idVenta }}</h2>
+            <button class="btn-icono" type="button" (click)="cerrarAnulacion()">✕</button>
+          </div>
+
+          <div class="field">
+            <label>Motivo de anulación</label>
+            <textarea rows="3" [(ngModel)]="motivo" name="motivo" minlength="15" placeholder="Mínimo 15 caracteres"></textarea>
+          </div>
+
+          <div class="mfa-box">
+            <p class="muted">Se requiere un código MFA. Solicite el código para simular el envío por SMS/correo.</p>
+            <button class="btn btn-outline btn-sm" type="button" (click)="solicitarMfa()" [disabled]="solicitandoMfa()">
+              {{ solicitandoMfa() ? 'Solicitando...' : 'Solicitar código MFA' }}
+            </button>
+            @if (mfa(); as codigoMfa) {
+              <p class="mfa-codigo">Código (simulado): <strong>{{ codigoMfa.codigo }}</strong></p>
+              <p class="muted">{{ codigoMfa.mensaje }} Expira en {{ codigoMfa.expiraEnSegundos }}s.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label>Código MFA</label>
+            <input type="text" [(ngModel)]="codigo" name="codigo" maxlength="6" />
+          </div>
+
+          <div class="modal-footer">
+            <button class="btn btn-outline" type="button" (click)="cerrarAnulacion()">Cancelar</button>
+            <button class="btn btn-danger" type="button" [disabled]="anulando()" (click)="anular()">
+              {{ anulando() ? 'Anulando...' : 'Confirmar anulación' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }

@@ -1,0 +1,29 @@
+
+      .detalle-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 4px 16px;
+        margin-bottom: 12px;
+        font-size: 14px;
+      }
+      .detalle-grid p {
+        margin: 4px 0;
+      }
+      .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-top: 1px solid #e5e7eb;
+        font-size: 18px;
+      }
+      .mfa-box {
+        background: #f9fafb;
+        border: 1px dashed #d1d5db;
+        border-radius: 10px;
+        padding: 12px;
+        margin: 12px 0;
+      }
+      .mfa-codigo {
+        font-size: 15px;
+        margin: 8px 0 4px;
+      }

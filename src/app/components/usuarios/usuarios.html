@@ -1,0 +1,52 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Usuarios</h1>
+        <p class="muted">Control de acceso, bloqueos e intentos fallidos</p>
+      </div>
+      <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Actualizar</button>
+    </div>
+
+    <section class="card">
+      @if (usuarios().length === 0) {
+        <p class="muted">No hay usuarios registrados.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Roles</th>
+                <th>Estado</th>
+                <th class="right">Intentos fallidos</th>
+                <th>Bloqueado hasta</th>
+                <th class="right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (usuario of usuarios(); track usuario.username) {
+                <tr>
+                  <td>{{ usuario.username }}</td>
+                  <td>{{ usuario.roles.join(', ') }}</td>
+                  <td>
+                    <span class="badge" [class.badge-ok]="usuario.enabled" [class.badge-off]="!usuario.enabled">
+                      {{ usuario.enabled ? 'Habilitado' : 'Deshabilitado' }}
+                    </span>
+                  </td>
+                  <td class="right">{{ usuario.intentosFallidos }}</td>
+                  <td>{{ usuario.bloqueadoHasta === 'NO' ? '—' : usuario.bloqueadoHasta }}</td>
+                  <td class="right acciones">
+                    <button class="btn btn-outline btn-sm" type="button" (click)="cambiarEstado(usuario)">
+                      {{ usuario.enabled ? 'Deshabilitar' : 'Habilitar' }}
+                    </button>
+                    @if (usuario.bloqueadoHasta !== 'NO') {
+                      <button class="btn btn-primary btn-sm" type="button" (click)="desbloquear(usuario)">Desbloquear</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>

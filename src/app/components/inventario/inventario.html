@@ -1,0 +1,86 @@
+
+    <div class="page-header">
+      <div>
+        <h1>Inventario</h1>
+        <p class="muted">Alertas de stock/caducidad y productos más vendidos</p>
+      </div>
+      <button class="btn btn-outline btn-sm" type="button" (click)="cargar()">Actualizar</button>
+    </div>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Alertas de inventario</h2>
+      </div>
+      @if (alertas().length === 0) {
+        <p class="muted">No hay alertas de inventario.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th class="right">Stock</th>
+                <th class="right">Mínimo</th>
+                <th>Caducidad</th>
+                <th>Estado stock</th>
+                <th>Estado caducidad</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (alerta of alertas(); track alerta.idProducto) {
+                <tr>
+                  <td>{{ alerta.nombre }}</td>
+                  <td>{{ alerta.categoria }}</td>
+                  <td class="right">{{ alerta.stock }}</td>
+                  <td class="right">{{ alerta.stockMinimo }}</td>
+                  <td>{{ alerta.fechaCaducidad || '—' }}</td>
+                  <td>
+                    <span class="badge" [class.badge-warn]="alerta.estadoStock !== 'NORMAL'" [class.badge-ok]="alerta.estadoStock === 'NORMAL'">
+                      {{ alerta.estadoStock }}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge" [class.badge-warn]="alerta.estadoCaducidad !== 'VIGENTE'" [class.badge-ok]="alerta.estadoCaducidad === 'VIGENTE'">
+                      {{ alerta.estadoCaducidad }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>Productos más vendidos</h2>
+      </div>
+      @if (ranking().length === 0) {
+        <p class="muted">Aún no hay ventas registradas.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th class="right">Unidades</th>
+                <th class="right">Ingreso</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (producto of ranking(); track producto.idProducto) {
+                <tr>
+                  <td>{{ producto.nombre }}</td>
+                  <td>{{ producto.categoria }}</td>
+                  <td class="right">{{ producto.totalUnidadesVendidas }}</td>
+                  <td class="right">S/ {{ producto.ingresoTotalGenerado | number: '1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
